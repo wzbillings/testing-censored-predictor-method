@@ -1,0 +1,21 @@
+project:
+  type: website
+
+website:
+  title: "Simulations to test correction for censored predictors"
+  # navbar:
+  #   left:
+  #     - href: index.qmd
+  #       text: Home
+  #     - about.qmd
+
+format:
+  html:
+    theme:
+      light: pulse
+      dark: vapor
+    css: styles.css
+    toc: true
+
+
+

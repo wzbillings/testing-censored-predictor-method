@@ -1,0 +1,18 @@
+---
+title: "Testing the correction for censored predictors"
+---
+
+While working on the norovirus project, we needed to fit models where the
+outcome is binary but there is a predictor which is real-valued and has a limit
+of detection. According to [Tran et al 2021](https://onlinelibrary.wiley.com/doi/10.1002/sim.8995), the ML
+model is then given by
+
+$$
+\begin{aligned}
+\ell &= \sum_{\text{uncensored data}} \log \left( f_{Y\mid X=x}(Y \mid X = x) \right) \quad +\\
+& \sum_{x \text{ censored}}\log\left( \frac{1}{F_X(x)} \right).
+\end{aligned}
+$$
+
+We can omit the other cases since $y$ is not censored here (it is binary and
+therefore cannot be censored).
