@@ -1,0 +1,93 @@
+---
+title: "Data simulation"
+author: "Zane"
+date: last-modified
+date-format: iso
+---
+
+In order to test the methods for censored predictors, we first need to generate
+a dataset containing a censored predictor from a known data generating process.
+Since we'll know the true parameters, we'll be able to see which method was
+able to recover the true parameters the best.
+
+## Simple test simulation
+
+For the first simulation, we'll use the most simple possible data-generating
+process. We'll draw the predictor from a normal distribution, censor it with
+some lower limit of detection, and then simulate an outcome variable using a
+linear regression model. For this simple model, we'll only consider one set
+of parameters and one lower limit of detection. I specifically set these
+parameters so that the data should be fairly easy to recover, but the
+censoring induces enough bias for an uncorrected linear model to be incorrect.
+
+```{r}
+generate_censored_pred_dataset <- function(
+		N = 1000, a, b, sigma, LoD, x_mu, x_sd, seed = 8248423,
+		outcome_model = c("gaussian", "logistic")
+	) {
+	# TODO generalize this function to accept a list of regression parameters
+	# TODO generalize this function to accept a list of distributional parms for
+	# X and a custom distribution function.
+	# TODO generalize this function to accept either linear or logistic as
+	# outcomes for y
+	
+	# Set seed for reproducibility
+	set.seed(seed)
+	
+	# Simulate the latent predictor first
+	dat <- data.frame(x_star = rnorm(N, x_mu, x_sd))
+	
+	# Apply censoring
+	dat$x <- pmax(dat$x_star, LoD)
+	
+	if (outcome_model == "gaussian") {
+		out <-
+			dat |>
+			# Calculate the regression mean
+			transform(mu = a + b * x_star) |>
+			# And simulate the y values
+			transform(y = rnorm(N, mu, sigma))
+	} else if (outcome_model == "logistic") {
+		out <-
+			dat |>
+			# Calculate the linear predictor
+			transform(eta = a + b * x_star) |>
+			# Calculate the p parameter vector
+			transform(p = plogis(eta)) |>
+			# Simulate the y values
+			transform(y = rbinom(N, size = 1, prob = p))
+	}
+	
+	return(out)
+}
+
+test <- generate_censored_pred_dataset(
+	1000, 4, -2, 0.5, 2, 0, 3, outcome_model = "gaussian"
+)
+
+test_log <- generate_censored_pred_dataset(
+	1000, 2, -0.5, 0.5, 2, 0, 3, outcome_model = "logistic"
+)
+
+saveRDS(
+	test,
+	file = here::here("data", "test-gaussian.Rds"),
+	compress = "xz"
+)
+
+saveRDS(
+	test_log,
+	file = here::here("data", "test-logistic.Rds"),
+	compress = "xz"
+)
+```
+
+
+# Additional simulations
+
+After we use the simple test simulation, we'll want to try several other
+cases to understand where each method performs well and if the methods
+have various breakdown points when it comes to the amount of censored data
+they can handle.
+
+# Logistic regression case

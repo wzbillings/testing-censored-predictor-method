@@ -1,0 +1,86 @@
+---
+title: "Imputation method"
+author: "Zane"
+date: last-modified
+date-format: iso
+---
+
+One potential method for correcting for censored predictors is to impute the
+censored values, using a truncated likelihood function to account for the
+constraint imposed by the nature of the censoring.
+
+
+```{r}
+test <- readRDS(file = here::here("data", "test-gaussian.Rds"))
+stan_data <- list(
+	N = nrow(test),
+	N_obs = sum(test$x > 2),
+	y = test$y[c(which(test$x > 2), which(test$x <= 2))],
+	x_obs = test$x[test$x > 2],
+	LoD = c(2)
+)
+
+data_file <- tempfile(fileext = ".json")
+write_stan_json(stan_data, data_file)
+```
+
+```{r}
+library(cmdstanr)
+
+mod <- cmdstanr::cmdstan_model(
+	stan_file = here::here("stan/test-imputation-method.stan"),
+	compile = FALSE
+)
+```
+
+```{r}
+mod$compile(pedantic = TRUE, force_recompile = TRUE)
+```
+
+```{r}
+fit <- mod$sample(
+	data = data_file,
+	seed = 1312390,
+	chains = 4,
+	parallel_chains = 4,
+	iter_warmup = 1000,
+	iter_sampling = 1000
+)
+```
+
+```{r}
+fit$summary(variables = c("a", "b", "sigma", "x_mu", "x_sd"))
+```
+
+```{r}
+run_imputation_method <- function(data, model_name) {
+	stan_data <- list(
+		N = nrow(data),
+		N_obs = sum(data$x > 2),
+		y = data$y[c(which(data$x > 2), which(data$x <= 2))],
+		x_obs = data$x[data$x > 2],
+		LoD = c(2)
+	)
+	
+	data_file <- tempfile(fileext = ".json")
+	write_stan_json(stan_data, data_file)
+	
+	mod <- cmdstanr::cmdstan_model(here::here("stan/test-imputation-method.stan"))
+
+	fit <- mod$sample(
+		data = data_file,
+		seed = 1312390,
+		chains = 4,
+		parallel_chains = 4,
+		iter_warmup = 1000,
+		iter_sampling = 5000
+	)
+	
+	out <- fit$summary(variables = c("a", "b", "sigma", "x_mu", "x_sd"))
+	saveRDS(here::here("res", "imputation", model_name))
+	
+	invisible(out)
+}
+```
+
+

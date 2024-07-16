@@ -1,18 +1,20 @@
 ---
-title: "Testing the correction for censored predictors"
+title: "A comparison of methods for regression with a censored covariate"
 ---
 
-While working on the norovirus project, we needed to fit models where the
-outcome is binary but there is a predictor which is real-valued and has a limit
-of detection. According to [Tran et al 2021](https://onlinelibrary.wiley.com/doi/10.1002/sim.8995), the ML
-model is then given by
+Lab assays often produce censored data, and these censored data are often used
+as both the dependent and independent variables in regression models. Most
+often, the censored nature of the data is completely ignored and censored values
+are treated as known constants. While adjustments for censored outcomes are
+straightforward, methods for proper handling of censored covariates (a term we
+use exchangeably with independent variable or predictor) are virtually unknown
+in the lab sciences, and there is no clear consensus on the correct approach in
+the literature.
 
-$$
-\begin{aligned}
-\ell &= \sum_{\text{uncensored data}} \log \left( f_{Y\mid X=x}(Y \mid X = x) \right) \quad +\\
-& \sum_{x \text{ censored}}\log\left( \frac{1}{F_X(x)} \right).
-\end{aligned}
-$$
-
-We can omit the other cases since $y$ is not censored here (it is binary and
-therefore cannot be censored).
+1. make outline of introduction
+1. Methods to consider
+	1. full bayesian approach
+	1. multiple imputation
+	1. tran method
+	1. complete case method
+	1. 
