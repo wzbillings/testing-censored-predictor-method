@@ -13,8 +13,8 @@ the literature.
 
 1. make outline of introduction
 1. Methods to consider
-	1. full bayesian approach
-	1. multiple imputation
+	1. naive regression
+	1. full bayesian approach with imputation
 	1. tran method
 	1. complete case method
 	1. 

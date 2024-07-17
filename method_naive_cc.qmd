@@ -1,0 +1,151 @@
+# Naive regression and complete case analysis
+
+
+Load data
+
+```{r}
+test <- readRDS(file = here::here("data", "test-gaussian.Rds"))
+```
+
+Naive
+
+```{r}
+stan_data_naive <- list(
+	N = nrow(test),
+	y = test$y,
+	x = test$x
+)
+
+data_file_naive <- tempfile(fileext = ".json")
+cmdstanr::write_stan_json(stan_data_naive, data_file_naive)
+```
+
+```{r}
+lin_reg_mod <- cmdstanr::cmdstan_model(
+	stan_file = here::here("stan/linear-regression.stan"),
+	compile = FALSE
+)
+
+lin_reg_mod$compile(
+	pedantic = TRUE,
+	force_recompile = TRUE
+)
+```
+
+```{r}
+fit_naive <- lin_reg_mod$sample(
+	data = data_file_naive,
+	seed = 1312390,
+	chains = 4,
+	parallel_chains = 2,
+	iter_warmup = 1000,
+	iter_sampling = 1000
+)
+```
+
+```{r}
+fit_naive$summary()
+```
+
+
+Complete case
+
+```{r}
+test_cc <- test[test$x > 2, ]
+stan_data_cc <- list(
+	N = nrow(test_cc),
+	y = test_cc$y,
+	x = test_cc$x
+)
+
+data_file_cc <- tempfile(fileext = ".json")
+cmdstanr::write_stan_json(stan_data_cc, data_file_cc)
+```
+
+```{r}
+fit_cc <- lin_reg_mod$sample(
+	data = data_file_cc,
+	seed = 1312390,
+	chains = 4,
+	parallel_chains = 2,
+	iter_warmup = 1000,
+	iter_sampling = 1000
+)
+```
+
+```{r}
+fit_cc$summary()
+```
+
+Logistic regression version
+
+```{r}
+test_logit <- readRDS(here::here("data/test-logistic.Rds"))
+```
+
+```{r}
+stan_data_naivelogit <- list(
+	N = nrow(test_logit),
+	p = 1L,
+	y = as.integer(test_logit$y),
+	x = matrix(test_logit$x, ncol = 1)
+)
+
+data_file_naivelogit <- tempfile(fileext = ".json")
+cmdstanr::write_stan_json(stan_data_naivelogit, data_file_naivelogit)
+```
+
+```{r}
+logit_reg_mod <- cmdstanr::cmdstan_model(
+	stan_file = here::here("stan/logistic-regression.stan"),
+	compile = FALSE
+)
+
+logit_reg_mod$compile(
+	pedantic = TRUE,
+	force_recompile = TRUE
+)
+```
+
+```{r}
+fit_naivelogit <- logit_reg_mod$sample(
+	data = data_file_naivelogit,
+	seed = 1312390,
+	chains = 4,
+	parallel_chains = 2,
+	iter_warmup = 1000,
+	iter_sampling = 1000
+)
+```
+
+```{r}
+fit_naivelogit$summary()
+```
+
+```{r}
+test_logit_cc <- test_logit[test_logit$x > 2, ]
+stan_data_logitcc <- list(
+	N = nrow(test_logit_cc),
+	p = 1L,
+	y = as.integer(test_logit_cc$y),
+	x = matrix(test_logit_cc$x, ncol = 1)
+)
+
+data_file_logitcc <- tempfile(fileext = ".json")
+cmdstanr::write_stan_json(stan_data_logitcc, data_file_logitcc)
+```
+
+```{r}
+fit_logitcc <- logit_reg_mod$sample(
+	data = data_file_logitcc,
+	seed = 1312390,
+	chains = 4,
+	parallel_chains = 2,
+	iter_warmup = 1000,
+	iter_sampling = 1000
+)
+```
+
+```{r}
+fit_logitcc$summary()
+```

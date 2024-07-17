@@ -90,4 +90,32 @@ cases to understand where each method performs well and if the methods
 have various breakdown points when it comes to the amount of censored data
 they can handle.
 
+```{r}
+sim_grid <- expand.grid(
+	N = c(10, 100, 1000, 10000),
+	a = c(-5, -1, 0, 1, 5),
+	b = c(-5, -1, 0, 1, 5),
+	sigma = c(0.5, 1, 5, 10),
+	LoD = seq(-5, 5),
+	x_mu = c(-5, -1, 0, 1, 5), 
+	x_sd = c(0.5, 1, 5, 10),
+	outcome_model = c("gaussian", "logistic")
+)
+```
+
+```{r}
+start <- Sys.time()
+out <- lapply(
+	1:nrow(sim_grid),
+	\(i) do.call(generate_censored_pred_dataset, sim_grid[i, ])
+)
+end <- Sys.time()
+```
+
+```{r}
+saveRDS()
+```
+
+
+
 # Logistic regression case

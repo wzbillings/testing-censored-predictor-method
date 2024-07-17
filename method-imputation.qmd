@@ -21,7 +21,7 @@ stan_data <- list(
 )
 
 data_file <- tempfile(fileext = ".json")
-write_stan_json(stan_data, data_file)
+cmdstanr::write_stan_json(stan_data, data_file)
 ```
 
 ```{r}
@@ -83,4 +83,35 @@ run_imputation_method <- function(data, model_name) {
 }
 ```
 
+# Logistic version
+
+```{r}
+test <- readRDS(file = here::here("data", "test-logistic.Rds"))
+stan_data <- list(
+	N = nrow(test),
+	N_obs = sum(test$x > 2),
+	y = test$y[c(which(test$x > 2), which(test$x <= 2))],
+	x_obs = test$x[test$x > 2],
+	LoD = c(2)
+)
+
+data_file <- tempfile(fileext = ".json")
+cmdstanr::write_stan_json(stan_data, data_file)
+```
+
+```{r}
+mod <- cmdstanr::cmdstan_model(
+	stan_file = here::here("stan/logistic-imputation.stan"),
+	compile = TRUE
+)
+
+fit <- mod$sample(
+		data = data_file,
+		seed = 1312390,
+		chains = 4,
+		parallel_chains = 4,
+		iter_warmup = 1000,
+		iter_sampling = 5000
+	)
+```
 
